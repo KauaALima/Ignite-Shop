@@ -4,12 +4,13 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-} from '@/components/ui/carousel'
+} from '@/components/modal/carousel'
 import { stripe } from '@/lib/stripe'
 import Stripe from 'stripe'
 import { Product } from '@/lib/types/product'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { AddToCartButtonModal } from '@/components/add-to-cart-button-modal'
 
 async function getProducts(): Promise<Product[]> {
   const response = await stripe.products.list({
@@ -22,13 +23,11 @@ async function getProducts(): Promise<Product[]> {
     return {
       id: product.id,
       name: product.name,
-      description: product.description,
-      imageUrl: product.images[0],
-      price: new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-      }).format(Number(price.unit_amount) / 100),
-      defaultPriceId: price.id,
+      description: product.description!,
+      price: price.unit_amount!,
+      currency: price.currency,
+      image: product.images[0],
+      priceId: price.id,
     }
   })
 
@@ -40,6 +39,7 @@ export const metadata: Metadata = {
 }
 
 export default async function Home() {
+  await new Promise((resolve) => setTimeout(resolve, 5000))
   const products = await getProducts()
 
   return (
@@ -53,19 +53,26 @@ export default async function Home() {
             >
               <Link href={`/product/${product.id}`}>
                 <Image
-                  src={product.imageUrl}
+                  src={product.image}
                   width={520}
                   height={480}
                   alt="Image Camisa 01"
                   className="object-cover"
                 />
-                <footer className="absolute bottom-1 left-1 right-1 flex translate-y-[110%] items-center justify-between rounded-md bg-prod p-8 opacity-0 transition-all duration-75 ease-in group-hover:translate-y-0 group-hover:opacity-100">
+              </Link>
+              <footer className="absolute bottom-1 left-1 right-1 flex translate-y-[110%] items-center justify-between rounded-md bg-prod p-6 opacity-0 transition-all duration-75 ease-in group-hover:translate-y-0 group-hover:opacity-100">
+                <div className="flex flex-col">
                   <strong className="text-[20px]">{product.name}</strong>
                   <span className="text-[20px] font-bold text-green-300">
-                    {product.price}
+                    {new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                    }).format(product.price / 100)}
                   </span>
-                </footer>
-              </Link>
+                </div>
+
+                <AddToCartButtonModal product={product} />
+              </footer>
             </CarouselItem>
           )
         })}

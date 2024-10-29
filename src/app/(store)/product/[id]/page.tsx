@@ -1,4 +1,4 @@
-import { BuyButton } from '@/components/buy-button'
+import { AddToCartButton } from '@/components/add-to-cart-button'
 import { stripe } from '@/lib/stripe'
 import type { Product } from '@/lib/types/product'
 import type { Metadata } from 'next'
@@ -21,13 +21,11 @@ async function getProductsDetails(ProductId: string): Promise<Product> {
   return {
     id: product.id,
     name: product.name,
-    description: product.description,
-    imageUrl: product.images[0],
-    price: new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(Number(price.unit_amount) / 100),
-    defaultPriceId: price.id,
+    description: product.description!,
+    image: product.images[0],
+    price: price.unit_amount!,
+    priceId: price.id,
+    currency: price.currency,
   }
 }
 
@@ -42,13 +40,11 @@ export async function generateStaticParams() {
     return {
       id: product.id,
       name: product.name,
-      description: product.description,
-      imageUrl: product.images[0],
-      price: new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-      }).format(Number(price.unit_amount) / 100),
-      defaultPriceId: price.id,
+      description: product.description!,
+      image: product.images[0],
+      price: price.unit_amount!,
+      priceId: price.id,
+      currency: price.currency,
     }
   })
 
@@ -74,7 +70,7 @@ export default async function ProductPage({ params }: ProductProps) {
     <div className="mx-auto my-0 grid max-w-[1180px] grid-cols-2 items-stretch gap-16">
       <div className="flex h-[656px] w-full max-w-xl items-center justify-center rounded-[8px] bg-back p-1">
         <Image
-          src={productDetails.imageUrl}
+          src={productDetails.image}
           width={520}
           height={480}
           alt={productDetails.name}
@@ -84,13 +80,16 @@ export default async function ProductPage({ params }: ProductProps) {
       <div className="flex flex-col">
         <h1 className="text-2xl text-gray-300">{productDetails.name}</h1>
         <span className="mt-4 block text-2xl text-green-300">
-          {productDetails.price}
+          {new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+          }).format(productDetails.price / 100)}
         </span>
         <p className="mt-10 text-base text-gray-300">
           {productDetails.description}
         </p>
 
-        <BuyButton DefaultpriceId={productDetails.defaultPriceId} />
+        <AddToCartButton items={productDetails} />
       </div>
     </div>
   )

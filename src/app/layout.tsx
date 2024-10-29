@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Roboto } from 'next/font/google'
+import CartProvider from '@/providers/cart-provider'
 import './globals.css'
 
 const roboto = Roboto({
@@ -25,7 +26,7 @@ export default function RootLayout({
       <body
         className={`${roboto.variable} bg-gray-900 font-sans text-white antialiased`}
       >
-        {children}
+        <CartProvider>{children}</CartProvider>
       </body>
     </html>
   )
